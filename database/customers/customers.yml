@@ -1,0 +1,212 @@
+api:
+  name: Customers API
+  description: API untuk mengelola data customer yang dimiliki oleh user tertentu.
+  format: JSON
+
+  endpoints:
+    - name: Get Customers
+      method: GET
+      path: ""
+      description: Mengambil seluruh customer milik user atau satu customer berdasarkan ID.
+      auth: none
+      query:
+        user_id:
+          type: integer
+          required: true
+          minimum: 1
+          description: ID user pemilik customer.
+        id:
+          type: integer
+          required: false
+          description: ID customer. Jika diisi, hanya mengambil satu customer milik user tersebut.
+      responses:
+        200:
+          description: Data customer berhasil diambil.
+          all_data:
+            message: "Data customer berhasil diambil"
+            data:
+              - id: 1
+                google_id: "google-123"
+                user_id: 5
+                name: "Budi"
+                phone: "08123456789"
+                created_at: "2026-11-16 10:00:00"
+          single_data:
+            message: "Data customer berhasil diambil"
+            data:
+              id: 1
+              google_id: "google-123"
+              user_id: 5
+              name: "Budi"
+              phone: "08123456789"
+              created_at: "2026-11-16 10:00:00"
+        400:
+          description: user_id wajib diisi.
+          body:
+            message: "user_id wajib diisi"
+        404:
+          description: Customer tidak ditemukan atau bukan milik user tersebut.
+          body:
+            message: "Customer tidak ditemukan"
+
+    - name: Create Customer
+      method: POST
+      path: ""
+      description: Menambahkan customer baru untuk user tertentu.
+      auth: none
+      headers:
+        Content-Type: application/json
+      body:
+        user_id:
+          type: integer
+          required: true
+          minimum: 1
+          description: ID user pemilik customer.
+        google_id:
+          type: string
+          required: false
+          nullable: true
+          description: Google ID customer.
+        name:
+          type: string
+          required: true
+          description: Nama customer, tidak boleh kosong.
+        phone:
+          type: string
+          required: false
+          nullable: true
+          description: Nomor telepon customer.
+      responses:
+        201:
+          description: Customer berhasil ditambahkan.
+          body:
+            message: "Customer berhasil ditambahkan"
+            data:
+              id: 1
+              google_id: "google-123"
+              user_id: 5
+              name: "Budi"
+              phone: "08123456789"
+        400:
+          description: user_id atau name tidak valid.
+          body:
+            message: "user_id dan name wajib diisi"
+        404:
+          description: User pemilik tidak ditemukan.
+          body:
+            message: "User pemilik tidak ditemukan"
+        409:
+          description: Terjadi konflik data, kemungkinan google_id sudah digunakan.
+          body:
+            message: "Data bentrok: google_id mungkin sudah digunakan"
+
+    - name: Update Customer
+      method: PUT
+      path: ""
+      description: Memperbarui data customer berdasarkan ID dan user pemiliknya.
+      auth: none
+      headers:
+        Content-Type: application/json
+      query:
+        id:
+          type: integer
+          required: true
+          minimum: 1
+          description: ID customer yang akan diperbarui.
+        user_id:
+          type: integer
+          required: true
+          minimum: 1
+          description: ID user pemilik customer.
+      body:
+        google_id:
+          type: string
+          required: false
+          nullable: true
+          description: Google ID baru. Jika tidak dikirim atau kosong, nilainya menjadi null.
+        name:
+          type: string
+          required: true
+          description: Nama customer baru, tidak boleh kosong.
+        phone:
+          type: string
+          required: false
+          nullable: true
+          description: Nomor telepon baru. Jika tidak dikirim atau kosong, nilainya menjadi null.
+      responses:
+        200:
+          description: Customer berhasil diperbarui.
+          body:
+            message: "Customer berhasil diperbarui"
+        400:
+          description: ID, user_id, atau name tidak valid.
+          possible_messages:
+            - "id dan user_id wajib diisi melalui URL"
+            - "name wajib diisi"
+        404:
+          description: Customer tidak ditemukan atau bukan milik user tersebut.
+          body:
+            message: "Customer tidak ditemukan"
+        409:
+          description: Terjadi konflik data, kemungkinan google_id sudah digunakan.
+
+    - name: Delete Customer
+      method: DELETE
+      path: ""
+      description: Menghapus customer berdasarkan ID dan user pemiliknya.
+      auth: none
+      query:
+        id:
+          type: integer
+          required: true
+          minimum: 1
+          description: ID customer yang akan dihapus.
+        user_id:
+          type: integer
+          required: true
+          minimum: 1
+          description: ID user pemilik customer.
+      responses:
+        200:
+          description: Customer berhasil dihapus.
+          body:
+            message: "Customer berhasil dihapus"
+        400:
+          description: ID atau user_id tidak valid.
+          body:
+            message: "id dan user_id wajib diisi melalui URL"
+        404:
+          description: Customer tidak ditemukan atau bukan milik user tersebut.
+          body:
+            message: "Customer tidak ditemukan"
+        409:
+          description: Terjadi konflik constraint database.
+
+  general:
+    content_type: application/json
+    supported_methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+    error_responses:
+      405:
+        description: Method tidak didukung.
+        allowed_methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+      500:
+        description: Terjadi kesalahan database.
+
+  notes:
+    - GET wajib menggunakan user_id untuk membatasi data berdasarkan pemilik.
+    - GET tanpa id mengambil seluruh customer milik user, diurutkan berdasarkan ID terbaru.
+    - GET dengan id hanya mengambil customer yang cocok dengan id dan user_id.
+    - POST mengambil user_id dari JSON body dan memeriksa keberadaan user pada tabel users.
+    - POST dan PUT mengubah google_id dan phone menjadi null jika nilainya kosong.
+    - PUT dan DELETE menggunakan id serta user_id dari query parameter URL.
+    - PUT dan DELETE hanya dapat mengakses customer yang dimiliki oleh user_id tersebut.
+    - google_id harus unik jika constraint database menerapkannya.
+    - Tidak ada autentikasi token yang diterapkan; user_id digunakan sebagai parameter kepemilikan data.

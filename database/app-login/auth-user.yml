@@ -1,0 +1,45 @@
+    - name: Login User
+      method: POST
+      path: localhost/bpplaundry/database/app-login/auth-user.php
+      description: >
+        Melakukan autentikasi pengguna menggunakan email dan password.
+        Jika berhasil, mengembalikan informasi pengguna tanpa password.
+      auth: none
+
+      request:
+        headers:
+          Content-Type: application/json
+        body:
+          email: "string, required, tidak boleh kosong"
+          password: "string, required, tidak boleh kosong"
+
+      response:
+        200:
+          message: "Login berhasil"
+          data:
+            id: 1
+            full_name: "John Doe"
+            email: "john@example.com"
+            phone: "08123456789"
+            created_at: "2026-11-13 10:00:00"
+
+        400:
+          message: "JSON tidak valid"
+
+        401:
+          message: "Email atau password salah"
+
+        405:
+          message: "Method tidak didukung"
+
+        422:
+          message: "Email dan password wajib diisi"
+
+        500:
+          message: "Terjadi kesalahan database"
+
+      notes:
+        - Password tidak disertakan dalam response.
+        - Login menggunakan pencocokan email dan password.
+        - Endpoint hanya menerima HTTP POST.
+        - Tidak menggunakan token atau session authentication.

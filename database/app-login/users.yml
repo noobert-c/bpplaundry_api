@@ -1,0 +1,137 @@
+
+api:
+  name: Users API
+  description: API untuk mengelola data pengguna.
+  format: JSON
+
+  endpoints:
+
+    - name: Get All Users
+      method: GET
+      path: localhost/bpplaundry/database/app-login/users.php
+      description: Mengambil seluruh data pengguna, diurutkan berdasarkan ID descending.
+      auth: none
+      request:
+        query: none
+      response:
+        200:
+          data:
+            - id: 1
+              full_name: "John Doe"
+              email: "john@example.com"
+              phone: "08123456789"
+              created_at: "2026-11-13 10:00:00"
+        500:
+          message: "Terjadi kesalahan database"
+
+    - name: Get User By ID
+      method: GET
+      path: localhost/bpplaundry/database/app-login/users.php
+      description: Mengambil satu pengguna berdasarkan ID.
+      auth: none
+      request:
+        query:
+          id: "integer, required, minimal 1"
+      response:
+        200:
+          data:
+            id: 1
+            full_name: "John Doe"
+            email: "john@example.com"
+            phone: "08123456789"
+            created_at: "2026-11-13 10:00:00"
+        400:
+          message: "ID tidak valid"
+        404:
+          message: "Pengguna tidak ditemukan"
+        500:
+          message: "Terjadi kesalahan database"
+
+    - name: Create User
+      method: POST
+      path: localhost/bpplaundry/database/app-login/users.php
+      description: Menambahkan pengguna baru.
+      auth: none
+      request:
+        headers:
+          Content-Type: application/json
+        body:
+          full_name: "string, required, max 100 characters"
+          email: "string, required, valid email, max 150 characters"
+          phone: "string, optional, max 20 characters, empty becomes NULL"
+          password: "string, required, minimum 8 characters"
+      response:
+        201:
+          message: "Pengguna berhasil ditambahkan"
+          id: 3
+        400:
+          message: "JSON tidak valid"
+        409:
+          message: "Email sudah digunakan (requires database constraint)"
+        422:
+          message: "Data tidak valid"
+        500:
+          message: "Terjadi kesalahan database"
+
+    - name: Update User
+      method: PUT
+      path: localhost/bpplaundry/database/app-login/users.php
+      description: Memperbarui data pengguna berdasarkan ID. Semua field utama harus dikirim kembali.
+      auth: none
+      request:
+        query:
+          id: "integer, required, minimal 1"
+        headers:
+          Content-Type: application/json
+        body:
+          full_name: "string, required, max 100 characters"
+          email: "string, required, valid email, max 150 characters"
+          phone: "string, optional, max 20 characters, empty becomes NULL"
+          password: "string, optional, minimum 8 characters if not empty; empty preserves old password"
+      response:
+        200:
+          message: "Pengguna berhasil diperbarui"
+        400:
+          message: "ID wajib diisi"
+        404:
+          message: "Pengguna tidak ditemukan"
+        409:
+          message: "Email sudah digunakan (requires database constraint)"
+        422:
+          message: "Data tidak valid"
+        500:
+          message: "Terjadi kesalahan database"
+
+    - name: Delete User
+      method: DELETE
+      path: localhost/bpplaundry/database/app-login/users.php
+      description: Menghapus pengguna secara permanen berdasarkan ID.
+      auth: none
+      request:
+        query:
+          id: "integer, required, minimal 1"
+      response:
+        200:
+          message: "Pengguna berhasil dihapus"
+        400:
+          message: "ID wajib diisi"
+        404:
+          message: "Pengguna tidak ditemukan"
+        500:
+          message: "Terjadi kesalahan database"
+
+  general:
+    content_type: application/json
+    invalid_json:
+      status: 400
+      response:
+        message: "JSON tidak valid"
+    unsupported_method:
+      status: 405
+      allowed: [GET, POST, PUT, DELETE]
+      response:
+        message: "Method tidak didukung"
+    database_error:
+      status: 500
+      response:
+        message: "Terjadi kesalahan database"

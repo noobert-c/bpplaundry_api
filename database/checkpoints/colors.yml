@@ -1,0 +1,177 @@
+api:
+  name: Colors API
+  description: API untuk mengelola data warna dengan normalisasi kode warna ke format 0xFF[HEX].
+  format: JSON
+
+  endpoints:
+    - name: Get Colors
+      method: GET
+      path: ""
+      description: Mengambil seluruh data warna atau satu warna berdasarkan ID.
+      auth: none
+      query:
+        id:
+          type: integer
+          required: false
+          description: ID warna. Jika diisi, hanya mengambil satu data.
+      responses:
+        200:
+          description: Data warna berhasil diambil.
+          all_data:
+            - id: 1
+              name: "Merah"
+              color: "0xFFFF0000"
+              is_used: false
+          single_data:
+            id: 1
+            name: "Merah"
+            color: "0xFFFF0000"
+            is_used: false
+        404:
+          description: Warna tidak ditemukan.
+          body:
+            message: "Warna tidak ditemukan"
+
+    - name: Create Color
+      method: POST
+      path: ""
+      description: Menambahkan data warna baru.
+      auth: none
+      headers:
+        Content-Type: application/json
+      body:
+        name:
+          type: string
+          required: true
+          max_length: 100
+          description: Nama warna, tidak boleh kosong.
+        color:
+          type: string
+          required: true
+          description: Kode warna berupa 6 digit HEX atau format 0xFF diikuti 8 digit HEX.
+        is_used:
+          type: boolean
+          required: false
+          default: false
+          description: Status apakah warna sedang digunakan.
+      responses:
+        201:
+          description: Warna berhasil ditambahkan.
+          body:
+            message: "Warna berhasil ditambahkan"
+            id: 1
+            color: "0xFFFF0000"
+        400:
+          description: JSON tidak valid atau data tidak memenuhi validasi.
+          possible_messages:
+            - "name dan color wajib diisi"
+            - "Format color tidak valid. Gunakan 0xFF[HEX] atau 6 digit HEX"
+            - "name maksimal 100 karakter"
+            - "is_used harus berupa boolean"
+
+    - name: Update Color
+      method: PUT
+      path: ""
+      description: Memperbarui data warna berdasarkan ID.
+      auth: none
+      headers:
+        Content-Type: application/json
+      query:
+        id:
+          type: integer
+          required: true
+          description: ID warna yang akan diperbarui.
+      body:
+        name:
+          type: string
+          required: true
+          max_length: 100
+          description: Nama warna baru.
+        color:
+          type: string
+          required: true
+          description: Kode warna berupa 6 digit HEX atau format 0xFF diikuti 8 digit HEX.
+        is_used:
+          type: boolean
+          required: false
+          description: Status penggunaan warna. Jika tidak dikirim, nilai sebelumnya dipertahankan.
+      responses:
+        200:
+          description: Warna berhasil diperbarui.
+          body:
+            message: "Warna berhasil diperbarui"
+            color: "0xFFFF0000"
+        400:
+          description: ID atau data tidak valid.
+        404:
+          description: Warna tidak ditemukan.
+          body:
+            message: "Warna tidak ditemukan"
+
+    - name: Delete Color
+      method: DELETE
+      path: ""
+      description: Menghapus data warna berdasarkan ID.
+      auth: none
+      query:
+        id:
+          type: integer
+          required: true
+          description: ID warna yang akan dihapus.
+      responses:
+        200:
+          description: Warna berhasil dihapus.
+          body:
+            message: "Warna berhasil dihapus"
+        400:
+          description: Parameter ID tidak valid.
+        404:
+          description: Warna tidak ditemukan.
+          body:
+            message: "Warna tidak ditemukan"
+
+  general:
+    content_type: application/json
+    supported_methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+    error_responses:
+      400:
+        description: Format JSON atau parameter tidak valid.
+      405:
+        description: Method tidak diizinkan.
+        allowed_methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+      500:
+        description: Terjadi kesalahan database.
+
+  color_normalization:
+    output_format: "0xFF[HEX]"
+    accepted_formats:
+      - "RRGGBB"
+      - "#RRGGBB"
+      - "FFRRGGBB"
+      - "0xFFRRGGBB"
+    rules:
+      - Prefix 0x atau # akan dihapus sebelum normalisasi.
+      - Format 6 digit HEX otomatis ditambahkan prefix alpha FF.
+      - Format 8 digit HEX harus memiliki alpha FF.
+      - Hasil akhir selalu menggunakan prefix 0x dan huruf HEX kapital.
+      - Warna transparan ditolak.
+    examples:
+      input: "#ff0000"
+      output: "0xFFFF0000"
+
+  notes:
+    - GET tanpa ID mengembalikan seluruh warna, diurutkan berdasarkan ID terbaru.
+    - GET mengembalikan is_used sebagai boolean.
+    - POST menggunakan false sebagai nilai default is_used.
+    - PUT hanya mengubah is_used jika field tersebut dikirim.
+    - name akan di-trim dan maksimal 100 karakter.
+    - is_used menerima boolean atau nilai 0 dan 1.
+    - Tidak ada autentikasi yang diterapkan pada kode ini.

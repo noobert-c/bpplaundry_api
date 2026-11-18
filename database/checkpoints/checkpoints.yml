@@ -1,0 +1,143 @@
+api:
+  name: Checkpoints API
+  description: API untuk mengelola data checkpoint berdasarkan warna (color).
+  format: JSON
+
+  endpoints:
+    - name: Get Checkpoints
+      method: GET
+      path: localhost/bpplaundry/database/checkpoints/checkpoints.php
+      description: Mengambil seluruh data checkpoint atau satu checkpoint berdasarkan ID.
+      auth: none
+      query:
+        id:
+          type: integer
+          required: false
+          description: ID checkpoint. Jika diisi, hanya mengambil satu data.
+      responses:
+        200:
+          description: Data berhasil diambil.
+          all_data:
+            - id: 1
+              color_id: 2
+              name: "Checkpoint A"
+          single_data:
+            id: 1
+            color_id: 2
+            name: "Checkpoint A"
+        404:
+          description: Checkpoint tidak ditemukan.
+          body:
+            message: "Checkpoint tidak ditemukan"
+
+    - name: Create Checkpoint
+      method: POST
+      path: localhost/bpplaundry/database/checkpoints/checkpoints.php
+      description: Menambahkan checkpoint baru.
+      auth: none
+      headers:
+        Content-Type: application/json
+      body:
+        color_id:
+          type: integer
+          required: true
+          description: ID warna, harus lebih besar dari 0.
+        name:
+          type: string
+          required: true
+          max_length: 100
+          description: Nama checkpoint, tidak boleh kosong.
+      responses:
+        201:
+          description: Checkpoint berhasil ditambahkan.
+          body:
+            message: "Checkpoint berhasil ditambahkan"
+            id: 1
+        400:
+          description: JSON tidak valid atau data tidak memenuhi validasi.
+          body:
+            message: "color_id dan name wajib diisi dengan benar"
+
+    - name: Update Checkpoint
+      method: PUT
+      path: localhost/bpplaundry/database/checkpoints/checkpoints.php
+      description: Memperbarui data checkpoint berdasarkan ID.
+      auth: none
+      headers:
+        Content-Type: application/json
+      query:
+        id:
+          type: integer
+          required: true
+          description: ID checkpoint yang akan diperbarui.
+      body:
+        color_id:
+          type: integer
+          required: true
+          description: ID warna, harus lebih besar dari 0.
+        name:
+          type: string
+          required: true
+          max_length: 100
+          description: Nama checkpoint, tidak boleh kosong.
+      responses:
+        200:
+          description: Checkpoint berhasil diperbarui.
+          body:
+            message: "Checkpoint berhasil diperbarui"
+        400:
+          description: ID atau data tidak valid.
+        404:
+          description: Checkpoint tidak ditemukan.
+          body:
+            message: "Checkpoint tidak ditemukan"
+
+    - name: Delete Checkpoint
+      method: DELETE
+      path: localhost/bpplaundry/database/checkpoints/checkpoints.php
+      description: Menghapus checkpoint berdasarkan ID.
+      auth: none
+      query:
+        id:
+          type: integer
+          required: true
+          description: ID checkpoint yang akan dihapus.
+      responses:
+        200:
+          description: Checkpoint berhasil dihapus.
+          body:
+            message: "Checkpoint berhasil dihapus"
+        400:
+          description: Parameter ID tidak valid.
+        404:
+          description: Checkpoint tidak ditemukan.
+          body:
+            message: "Checkpoint tidak ditemukan"
+
+  general:
+    content_type: application/json
+    supported_methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+    error_responses:
+      400:
+        description: Format JSON atau parameter tidak valid.
+      405:
+        description: Method tidak diizinkan.
+        allowed_methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+      500:
+        description: Terjadi kesalahan database.
+
+  notes:
+    - GET tanpa ID mengembalikan seluruh checkpoint, diurutkan berdasarkan ID terbaru.
+    - GET dengan ID mengembalikan satu checkpoint.
+    - POST dan PUT memerlukan color_id dan name.
+    - name akan di-trim dan maksimal 100 karakter.
+    - JSON request yang tidak valid menghasilkan HTTP 400.
+    - Tidak ada autentikasi yang diterapkan pada kode ini.

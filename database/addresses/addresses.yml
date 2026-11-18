@@ -1,0 +1,134 @@
+
+api:
+  name: Addresses API
+  description: Mengelola alamat pelanggan, termasuk alamat lengkap dan koordinat geografis.
+  format: JSON
+
+  endpoints:
+
+    - name: Get Addresses
+      method: GET
+      path: localhost/bpplaundry/database/addresses/addresses.php
+      description: Mengambil daftar alamat milik pelanggan yang terhubung dengan user_id. Dapat difilter berdasarkan customer_id dan id alamat.
+      auth: none
+      request:
+        query:
+          user_id: "integer, required, minimal 1"
+          customer_id: "integer, optional, filter berdasarkan pelanggan"
+          id: "integer, optional, mengambil satu alamat tertentu"
+      response:
+        200:
+          message: "Data alamat berhasil diambil"
+          data:
+            - id: 1
+              customer_id: 10
+              address: "Jl. Perintis Kemerdekaan, Makassar"
+              latitude: -5.1354
+              longitude: 119.4931
+        400:
+          message: "user_id wajib diisi"
+        404:
+          message: "Alamat tidak ditemukan"
+        500:
+          message: "Terjadi kesalahan database"
+
+    - name: Create Address
+      method: POST
+      path: localhost/bpplaundry/database/addresses/addresses.php
+      description: Menambahkan alamat baru untuk pelanggan. Memastikan customer_id merupakan milik user_id yang diberikan.
+      auth: none
+      request:
+        headers:
+          Content-Type: application/json
+        query:
+          user_id: "integer, optional, dapat dikirim melalui URL atau body"
+        body:
+          user_id: "integer, required jika tidak dikirim melalui URL"
+          customer_id: "integer, required, harus dimiliki user_id"
+          address: "string, optional, kosong disimpan sebagai NULL"
+          latitude: "number, optional, range -90 sampai 90"
+          longitude: "number, optional, range -180 sampai 180"
+      response:
+        201:
+          message: "Alamat berhasil ditambahkan"
+          data:
+            id: 1
+            customer_id: 10
+            address: "Jl. Perintis Kemerdekaan, Makassar"
+            latitude: -5.1354
+            longitude: 119.4931
+        400:
+          message: "user_id dan customer_id wajib diisi"
+          # Alternatif:
+          # Latitude harus antara -90 dan 90
+          # Longitude harus antara -180 dan 180
+        404:
+          message: "Customer tidak ditemukan"
+        500:
+          message: "Terjadi kesalahan database"
+
+    - name: Update Address
+      method: PUT
+      path: localhost/bpplaundry/database/addresses/addresses.php
+      description: Memperbarui alamat dan koordinat berdasarkan ID. Memastikan alamat merupakan milik user_id terkait. customer_id opsional sebagai filter kepemilikan tambahan.
+      auth: none
+      request:
+        headers:
+          Content-Type: application/json
+        query:
+          id: "integer, required, minimal 1"
+          user_id: "integer, required, minimal 1"
+          customer_id: "integer, optional, filter kepemilikan customer"
+        body:
+          customer_id: "integer, optional, digunakan sebagai filter tambahan jika diberikan"
+          address: "string, optional, kosong disimpan sebagai NULL"
+          latitude: "number, optional, range -90 sampai 90; null atau kosong menjadi NULL"
+          longitude: "number, optional, range -180 sampai 180; null atau kosong menjadi NULL"
+      response:
+        200:
+          message: "Alamat berhasil diperbarui"
+        400:
+          message: "id dan user_id wajib diisi melalui URL"
+          # Alternatif:
+          # Latitude harus antara -90 dan 90
+          # Longitude harus antara -180 dan 180
+        404:
+          message: "Alamat tidak ditemukan"
+        500:
+          message: "Terjadi kesalahan database"
+
+    - name: Delete Address
+      method: DELETE
+      path: localhost/bpplaundry/database/addresses/addresses.php
+      description: Menghapus alamat berdasarkan ID dengan memastikan alamat dimiliki oleh user_id terkait.
+      auth: none
+      request:
+        query:
+          id: "integer, required, minimal 1"
+          user_id: "integer, required, minimal 1"
+      response:
+        200:
+          message: "Alamat berhasil dihapus"
+        400:
+          message: "id dan user_id wajib diisi melalui URL"
+        404:
+          message: "Alamat tidak ditemukan"
+        500:
+          message: "Terjadi kesalahan database"
+
+  general:
+    content_type: application/json
+    unsupported_method:
+      status: 405
+      allowed: [GET, POST, PUT, DELETE]
+      response:
+        message: "Method tidak didukung"
+
+  notes:
+    - Semua operasi menggunakan relasi addresses.customer_id ke customers.id.
+    - Kepemilikan alamat diverifikasi melalui customers.user_id.
+    - GET tidak mengembalikan alamat milik user lain.
+    - POST menerima user_id dari URL atau body.
+    - PUT dan DELETE membutuhkan id serta user_id melalui URL.
+    - Alamat dan koordinat boleh NULL.
+    - Koordinat menggunakan latitude (-90 sampai 90) dan longitude (-180 sampai 180).

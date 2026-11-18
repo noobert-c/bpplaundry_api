@@ -1,0 +1,298 @@
+
+api:
+  name: Orders API
+  description: API untuk mengelola data pesanan (orders), termasuk mengambil, menambahkan, memperbarui, dan menghapus pesanan.
+  path: ""
+
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+
+  methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+
+  endpoints:
+    - name: Get Orders
+      method: GET
+      description: Mengambil daftar pesanan atau detail pesanan berdasarkan filter.
+      parameters:
+        query:
+          - name: id
+            type: integer
+            required: false
+            description: ID pesanan.
+          - name: order_code
+            type: string
+            required: false
+            description: Kode pesanan.
+          - name: customer_id
+            type: integer
+            required: false
+            description: Filter berdasarkan ID customer.
+          - name: created_by
+            type: integer
+            required: false
+            description: Filter berdasarkan ID user pembuat pesanan.
+          - name: payment_status
+            type: string
+            required: false
+            description: Filter berdasarkan status pembayaran.
+          - name: needs_delivery
+            type: integer
+            required: false
+            allowed_values: [0, 1]
+            description: Filter pesanan yang membutuhkan pengantaran.
+
+      response:
+        success:
+          status: 200
+          body:
+            success: true
+            data: "Object pesanan jika menggunakan id/order_code, atau array pesanan jika menggunakan filter lainnya."
+        errors:
+          - status: 400
+            message: ID pesanan tidak valid / customer_id tidak valid / created_by tidak valid / needs_delivery harus 0 atau 1
+          - status: 404
+            message: Pesanan tidak ditemukan
+
+    - name: Create Order
+      method: POST
+      description: Membuat pesanan baru.
+      body:
+        required:
+          - order_code
+          - customer_id
+          - created_by
+        fields:
+          - name: order_code
+            type: string
+            required: true
+            max_length: 50
+            description: Kode unik pesanan.
+          - name: customer_id
+            type: integer
+            required: true
+            description: ID customer pemilik pesanan.
+          - name: created_by
+            type: integer
+            required: true
+            description: ID user yang membuat pesanan.
+          - name: description
+            type: string
+            required: false
+            nullable: true
+            description: Deskripsi atau catatan pesanan.
+          - name: received_at
+            type: string
+            format: "YYYY-MM-DD HH:MM:SS"
+            required: false
+            nullable: true
+            description: Waktu pesanan diterima. Jika null atau tidak dikirim, database menggunakan CURRENT_TIMESTAMP.
+          - name: ready_at
+            type: string
+            format: "YYYY-MM-DD HH:MM:SS"
+            required: false
+            nullable: true
+            description: Waktu pesanan siap.
+          - name: completed_at
+            type: string
+            format: "YYYY-MM-DD HH:MM:SS"
+            required: false
+            nullable: true
+            description: Waktu pesanan selesai.
+          - name: total_amount
+            type: number
+            required: false
+            default: 0
+            min: 0
+            max: 9999999999.99
+            description: Total biaya pesanan.
+          - name: payment_status
+            type: string
+            required: false
+            default: unpaid
+            allowed_values:
+              - unpaid
+              - partial
+              - paid
+              - refunded
+            description: Status pembayaran.
+          - name: needs_delivery
+            type: boolean
+            required: false
+            default: false
+            accepted_values:
+              - true
+              - false
+              - 0
+              - 1
+              - "0"
+              - "1"
+            description: Menentukan apakah pesanan membutuhkan pengantaran.
+
+      response:
+        success:
+          status: 201
+          body:
+            success: true
+            message: Pesanan berhasil dibuat
+            data:
+              id: 1
+              order_code: ORD-001
+        errors:
+          - status: 400
+            message: Body JSON tidak valid / Kode pesanan, customer_id, dan created_by wajib valid / total_amount tidak valid / payment_status tidak valid / needs_delivery harus berupa boolean atau 0/1
+          - status: 404
+            message: Customer tidak ditemukan / User pembuat pesanan tidak ditemukan
+          - status: 409
+            message: Data duplikat atau melanggar relasi database
+
+    - name: Update Order
+      method: PUT
+      description: Memperbarui seluruh data pesanan berdasarkan ID.
+      body:
+        required:
+          - id
+          - order_code
+          - customer_id
+          - created_by
+        fields:
+          - name: id
+            type: integer
+            required: true
+            description: ID pesanan yang akan diperbarui.
+          - name: order_code
+            type: string
+            required: true
+            max_length: 50
+          - name: customer_id
+            type: integer
+            required: true
+          - name: created_by
+            type: integer
+            required: true
+          - name: description
+            type: string
+            required: false
+            nullable: true
+          - name: received_at
+            type: string
+            format: "YYYY-MM-DD HH:MM:SS"
+            required: false
+            nullable: true
+            description: Jika null atau tidak dikirim, kode menggunakan waktu saat ini.
+          - name: ready_at
+            type: string
+            format: "YYYY-MM-DD HH:MM:SS"
+            required: false
+            nullable: true
+          - name: completed_at
+            type: string
+            format: "YYYY-MM-DD HH:MM:SS"
+            required: false
+            nullable: true
+          - name: total_amount
+            type: number
+            required: false
+            default: 0
+          - name: payment_status
+            type: string
+            required: false
+            default: unpaid
+            allowed_values:
+              - unpaid
+              - partial
+              - paid
+              - refunded
+          - name: needs_delivery
+            type: boolean
+            required: false
+            default: false
+            accepted_values:
+              - true
+              - false
+              - 0
+              - 1
+              - "0"
+              - "1"
+
+      response:
+        success:
+          status: 200
+          body:
+            success: true
+            message: Pesanan berhasil diperbarui
+            data:
+              id: 1
+              order_code: ORD-001
+        errors:
+          - status: 400
+            message: ID pesanan tidak valid / Body JSON tidak valid / Kode pesanan, customer_id, dan created_by wajib valid
+          - status: 404
+            message: Customer tidak ditemukan / User pembuat pesanan tidak ditemukan / Pesanan tidak ditemukan
+          - status: 409
+            message: Data duplikat atau melanggar relasi database
+
+    - name: Delete Order
+      method: DELETE
+      description: Menghapus pesanan berdasarkan ID.
+      parameters:
+        query:
+          - name: id
+            type: integer
+            required: false
+            description: ID pesanan yang akan dihapus. Dapat dikirim melalui query URL atau JSON body.
+      body:
+        fields:
+          - name: id
+            type: integer
+            required: false
+            description: ID pesanan jika tidak dikirim melalui query URL.
+      response:
+        success:
+          status: 200
+          body:
+            success: true
+            message: Pesanan berhasil dihapus
+            data:
+              id: 1
+              order_code: ORD-001
+        errors:
+          - status: 400
+            message: ID pesanan tidak valid
+          - status: 404
+            message: Pesanan tidak ditemukan
+
+  general_responses:
+    - status: 200
+      description: Operasi berhasil.
+    - status: 201
+      description: Pesanan berhasil dibuat.
+    - status: 400
+      description: Request atau input tidak valid.
+    - status: 404
+      description: Data tidak ditemukan.
+    - status: 405
+      description: Method tidak didukung.
+    - status: 409
+      description: Data duplikat atau melanggar relasi database.
+    - status: 500
+      description: Terjadi kesalahan database atau server.
+
+  notes:
+    - GET dapat mengambil semua pesanan atau menggunakan kombinasi filter.
+    - Jika query id atau order_code digunakan, API mengembalikan satu objek pesanan.
+    - Data pesanan GET menyertakan customer_name dan customer_phone dari tabel customers.
+    - customer_id harus merujuk pada customer yang tersedia.
+    - created_by harus merujuk pada user yang tersedia.
+    - order_code maksimal 50 karakter.
+    - total_amount tidak boleh negatif dan maksimal 9999999999.99.
+    - Format tanggal harus YYYY-MM-DD HH:MM:SS.
+    - PUT mengharuskan seluruh field utama dikirim; field yang tidak dikirim akan menggunakan nilai default atau null sesuai kode.
+    - Pada PUT, received_at yang null atau tidak dikirim akan diganti dengan waktu saat ini.
+    - OPTIONS digunakan untuk kebutuhan CORS dan mengembalikan status 200.
+    - Tidak terdapat autentikasi atau pemeriksaan kepemilikan user secara eksplisit pada endpoint ini.

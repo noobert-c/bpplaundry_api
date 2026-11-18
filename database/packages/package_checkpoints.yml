@@ -1,0 +1,208 @@
+api:
+  name: Package Checkpoints API
+  description: API untuk mengelola relasi antara paket laundry dan checkpoint.
+  format: JSON
+
+  endpoints:
+    - name: Get Package Checkpoints
+      method: GET
+      path: ""
+      description: Mengambil seluruh relasi atau memfilter relasi berdasarkan ID, paket, maupun checkpoint.
+      auth: none
+      query:
+        id:
+          type: integer
+          required: false
+          description: Filter berdasarkan ID relasi.
+        package_id:
+          type: integer
+          required: false
+          description: Filter berdasarkan ID paket.
+        checkpoint_id:
+          type: integer
+          required: false
+          description: Filter berdasarkan ID checkpoint.
+      responses:
+        200:
+          description: Data relasi berhasil diambil.
+          body:
+            success: true
+            data:
+              - id: 1
+                package_id: 2
+                package_name: "Cuci Reguler"
+                checkpoint_id: 3
+                checkpoint_name: "Proses Pencucian"
+
+    - name: Create Package Checkpoint
+      method: POST
+      path: ""
+      description: Menambahkan relasi checkpoint ke paket.
+      auth: none
+      headers:
+        Content-Type: application/json
+      body:
+        package_id:
+          type: integer
+          required: true
+          minimum: 1
+          description: ID paket yang akan dihubungkan.
+        checkpoint_id:
+          type: integer
+          required: true
+          minimum: 1
+          description: ID checkpoint yang akan ditambahkan ke paket.
+      responses:
+        201:
+          description: Relasi berhasil dibuat.
+          body:
+            success: true
+            message: "Checkpoint berhasil ditambahkan ke paket"
+            data:
+              id: 1
+              package_id: 2
+              checkpoint_id: 3
+        400:
+          description: Body JSON atau ID tidak valid.
+          body:
+            success: false
+            message: "package_id dan checkpoint_id wajib berupa ID positif"
+        404:
+          description: Paket atau checkpoint tidak ditemukan.
+          possible_messages:
+            - "Paket tidak ditemukan"
+            - "Checkpoint tidak ditemukan"
+        409:
+          description: Relasi paket dan checkpoint sudah ada.
+          body:
+            success: false
+            message: "Relasi paket dan checkpoint sudah ada"
+
+    - name: Update Package Checkpoint
+      method: PUT
+      path: ""
+      description: Mengubah paket atau checkpoint pada suatu relasi.
+      auth: none
+      headers:
+        Content-Type: application/json
+      body:
+        id:
+          type: integer
+          required: true
+          minimum: 1
+          description: ID relasi yang akan diperbarui.
+        package_id:
+          type: integer
+          required: true
+          minimum: 1
+          description: ID paket baru.
+        checkpoint_id:
+          type: integer
+          required: true
+          minimum: 1
+          description: ID checkpoint baru.
+      responses:
+        200:
+          description: Relasi berhasil diperbarui.
+          body:
+            success: true
+            message: "Relasi berhasil diperbarui"
+            data:
+              id: 1
+              package_id: 2
+              checkpoint_id: 3
+        400:
+          description: Body JSON atau salah satu ID tidak valid.
+          body:
+            success: false
+            message: "ID relasi, paket, atau checkpoint tidak valid"
+        404:
+          description: Relasi, paket, atau checkpoint tidak ditemukan.
+          possible_messages:
+            - "Relasi tidak ditemukan"
+            - "Paket tidak ditemukan"
+            - "Checkpoint tidak ditemukan"
+        409:
+          description: Relasi duplikat.
+          body:
+            success: false
+            message: "Relasi paket dan checkpoint tersebut sudah ada"
+
+    - name: Delete Package Checkpoint
+      method: DELETE
+      path: ""
+      description: Menghapus relasi paket dan checkpoint berdasarkan ID relasi.
+      auth: none
+      query:
+        id:
+          type: integer
+          required: false
+          minimum: 1
+          description: ID relasi yang akan dihapus.
+      body:
+        id:
+          type: integer
+          required: false
+          minimum: 1
+          description: Alternatif pengiriman ID melalui JSON body jika tidak menggunakan query.
+      responses:
+        200:
+          description: Relasi berhasil dihapus.
+          body:
+            success: true
+            message: "Relasi berhasil dihapus"
+        400:
+          description: ID relasi tidak valid.
+          body:
+            success: false
+            message: "ID relasi tidak valid"
+        404:
+          description: Relasi tidak ditemukan.
+          body:
+            success: false
+            message: "Relasi tidak ditemukan"
+
+  general:
+    content_type: application/json
+    supported_methods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    cors:
+      allow_origin: "*"
+      allow_methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      allow_headers:
+        - Content-Type
+        - Authorization
+    error_responses:
+      405:
+        description: Method tidak didukung.
+        allowed_methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+      409:
+        description: Data melanggar constraint database atau relasi duplikat.
+      500:
+        description: Terjadi kesalahan database.
+
+  notes:
+    - GET mendukung kombinasi filter id, package_id, dan checkpoint_id.
+    - GET menggunakan INNER JOIN ke tabel packages dan checkpoints untuk mendapatkan nama paket dan checkpoint.
+    - Hasil GET diurutkan berdasarkan ID relasi terbaru.
+    - POST dan PUT memvalidasi keberadaan paket dan checkpoint sebelum menyimpan data.
+    - Kombinasi package_id dan checkpoint_id tidak boleh duplikat.
+    - PUT menggunakan ID relasi dari JSON body.
+    - DELETE menerima ID melalui query parameter atau JSON body; query diprioritaskan.
+    - OPTIONS digunakan untuk menangani CORS preflight.
+    - HTTP 409 juga digunakan untuk menangani pelanggaran constraint database.
+    - Tidak ada autentikasi yang diterapkan pada kode ini.
